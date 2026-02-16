@@ -623,10 +623,10 @@ int main() {
             case 5: // PACMAN
                 PACMAN();
             break;
-            break;
         }
     }
 
     return 0;
 }
+
 
