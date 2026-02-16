@@ -525,7 +525,9 @@ void SNAKE()
 ////////////////////////////////////////////////////////////////////
 
 void BREAKOUT() {
-
+    /*      Input    */
+    /*      Update    */
+    /*      Render    */
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -533,7 +535,9 @@ void BREAKOUT() {
 ////////////////////////////////////////////////////////////////////
 
 void PACMAN() {
-
+    /*      Input    */
+    /*      Update    */
+    /*      Render    */
 }
 
 int main() {
@@ -612,13 +616,17 @@ int main() {
             break;
             case 3: // SNAKE
                 SNAKE();
+            break;
             case 4: // BREAKOUT
                 BREAKOUT();
+            break;
             case 5: // PACMAN
                 PACMAN();
+            break;
             break;
         }
     }
 
     return 0;
 }
+
