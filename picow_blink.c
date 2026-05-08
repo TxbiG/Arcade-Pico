@@ -85,6 +85,9 @@ void MENU() {
 #define HEIGHT 15
 #define WIDTH 10
 
+bool tetrisInit = false;
+
+
 const int FALL_SPEED = 10;
 unsigned int seed = 12345;
 
@@ -284,8 +287,34 @@ void clearRows() {
     }
 }
 
-void Tetris(void)
-{
+void initTetris() {
+
+    // Clear board
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            board[y][x] = 0;
+        }
+    }
+
+    currentPiece = 0;
+
+    pieceX = WIDTH / 2 - 1;
+    pieceY = 0;
+
+    rotation = 0;
+
+    fallCounter = 0;
+
+    gameOver = false;
+
+    spawnPiece();
+
+    tetrisInit = true;
+}
+
+void Tetris(void) {
+    if (!tetrisInit) { initTetris(); }
+    
     /*      Input        */
     if (gpio_get(BUTTON_LEFT) == 0) { if (!isCollision(pieceX - 1, pieceY, rotation)) { pieceX--; } }
     if (gpio_get(BUTTON_RIGHT) == 0) { if (!isCollision(pieceX + 1, pieceY, rotation)) { pieceX++; } }
@@ -300,7 +329,10 @@ void Tetris(void)
         if (!isCollision(pieceX, pieceY, newRotation)) {  rotation = newRotation; }
     }
 
-    if (gpio_get(BUTTON_SELECT) == 0) { Game = 0; }
+    if (gpio_get(BUTTON_SELECT) == 0) {
+        tetrisInit = false;
+        Game = 0;
+    }
 
     /*      Update       */
     fallCounter++;
@@ -314,7 +346,11 @@ void Tetris(void)
         clearRows();
         spawnPiece();
     }
-    if (gameOver) { gameOver = false; Game = 0; }
+
+    if (gameOver) {
+        tetrisInit = false;
+        Game = 0;
+    }
 
 
     /*      Render       */
@@ -380,12 +416,36 @@ int ball_dx = 1, ball_dy = 1;
 int score1 = 0;
 int score2 = 0;
 
-void PONG()
-{
+bool pongInit = false;
+
+void initPong() {
+
+    paddle1_y = SCREEN_HEIGHT / 2 - PADDLE_HEIGHT / 2;
+    paddle2_y = SCREEN_HEIGHT / 2 - PADDLE_HEIGHT / 2;
+
+    ball_x = SCREEN_WIDTH / 2;
+    ball_y = SCREEN_HEIGHT / 2;
+
+    ball_dx = 1;
+    ball_dy = 1;
+
+    score1 = 0;
+    score2 = 0;
+
+    pongInit = true;
+}
+
+void PONG() {
+    if (!pongInit) {
+        initPong();
+    }
     /*      Input    */
     if (gpio_get(BUTTON_UP) == 0 && paddle1_y > 0) paddle1_y -= PLAYER_SPEED;
     if (gpio_get(BUTTON_DOWN) == 0 && paddle1_y < SCREEN_HEIGHT - PADDLE_HEIGHT) paddle1_y += PLAYER_SPEED;
-    if (gpio_get(BUTTON_SELECT) == 0) { Game = 0; }
+    if (gpio_get(BUTTON_SELECT) == 0) {
+        pongInit = false;
+        Game = 0;
+    }
 
     
 
@@ -462,20 +522,50 @@ int snakeY[SNAKE_MAX_LEN] = {SCREEN_HEIGHT / 2};
 int snakeLen = 5;
 int foodX = 5, foodY = 5;
 int dirX = 1, dirY = 0;  // Start moving right
+bool snakeInit = false;
+
 
 void spawnFood() {
     foodX = randInt() % SCREEN_WIDTH;
     foodY = randInt() % SCREEN_HEIGHT;
 }
 
-void SNAKE()
-{
+void initSnake() {
+
+    snakeLen = 5;
+
+    for (int i = 0; i < SNAKE_MAX_LEN; i++) {
+
+        snakeX[i] = SCREEN_WIDTH / 2 - i;
+        snakeY[i] = SCREEN_HEIGHT / 2;
+    }
+
+    dirX = 1;
+    dirY = 0;
+
+    foodX = 5;
+    foodY = 5;
+
+    spawnFood();
+
+    gameOver = false;
+
+    snakeInit = true;
+}
+
+void SNAKE() {
+    if (!snakeInit) {
+        initSnake();
+    }
     /*      Input    */
     if (gpio_get(BUTTON_UP) == 0 && dirY == 0) { dirX = 0; dirY = -1; }
     if (gpio_get(BUTTON_DOWN) == 0 && dirY == 0) { dirX = 0; dirY = 1; }
     if (gpio_get(BUTTON_LEFT) == 0 && dirX == 0) { dirX = -1; dirY = 0; }
     if (gpio_get(BUTTON_RIGHT) == 0 && dirX == 0) { dirX = 1; dirY = 0; }
-    if (gpio_get(BUTTON_SELECT) == 0) { Game = 0; }
+    if (gpio_get(BUTTON_SELECT) == 0) {
+        snakeInit = false;
+        Game = 0;
+    }
 
     /*      Update    */
     // Move snake
@@ -506,6 +596,10 @@ void SNAKE()
 
     // Check if head collides with any part of the body
     for (int i = 1; i < snakeLen; i++) { if (snakeX[0] == snakeX[i] && snakeY[0] == snakeY[i]) { gameOver = true; } }
+    if (gameOver) {
+        snakeInit = false;
+        Game = 0;
+    }
 
     /*      Render    */
     for (int i = 0; i < snakeLen; i++) {
