@@ -32,7 +32,7 @@
 
 ssd1306_t disp;     // OLED Display
 
-// Todo - Fix Memory when restarting games, Sound
+// Todo - Add Sound
 
 /* GameMode
  * Menu = 0
