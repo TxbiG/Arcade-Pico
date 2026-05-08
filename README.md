@@ -5,10 +5,8 @@ Small Project with a few games to run on the Pico micro-controller
 - Tetris
 - Pong
 - Snake
-
-- Todo
-  - Breakout
-  - Pac man
+- Breakout
+- Pacman
 
 #### Software
 - [Pico-ssd1306 by daschr](https://github.com/daschr/pico-ssd1306)
