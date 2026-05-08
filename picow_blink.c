@@ -49,18 +49,14 @@ int gametempButton = 10;
 /*      Menu        */
 void MENU() {
     /*  Input   */
-    if (gpio_get(BUTTON_UP) == 0) {
-        gameTempSelect--;
-        if (gameTempSelect <= 0) { gameTempSelect = 3; }
-    }
-    if (gpio_get(BUTTON_DOWN) == 0) {
-        gameTempSelect++;
-        if (gameTempSelect > 3) { gameTempSelect = 1; }
-    }
+    if (gpio_get(BUTTON_UP) == 0) { gameTempSelect--; if (gameTempSelect <= 0) { gameTempSelect = 5; } }
+    if (gpio_get(BUTTON_DOWN) == 0) { gameTempSelect++; if (gameTempSelect > 3) { gameTempSelect = 1; } }
     if (gpio_get(BUTTON_START) == 0)  {
         if (gameTempSelect == 1) { Game = 1; }
         if (gameTempSelect == 2) { Game = 2; }
         if (gameTempSelect == 3) { Game = 3; }
+        if (gameTempSelect == 4) { Game = 4; }
+        if (gameTempSelect == 5) { Game = 5; }
     }
     
     /*  Update  */
@@ -524,21 +520,265 @@ void SNAKE()
 /*      BREAKOUT     */
 ////////////////////////////////////////////////////////////////////
 
+#define BRICK_ROWS 4
+#define BRICK_COLS 10
+#define BRICK_WIDTH 12
+#define BRICK_HEIGHT 4
+
+int breakoutPaddleX = SCREEN_WIDTH / 2 - 10;
+int breakoutBallX = SCREEN_WIDTH / 2;
+int breakoutBallY = SCREEN_HEIGHT / 2;
+int breakoutBallDX = 1;
+int breakoutBallDY = -1;
+
+bool bricks[BRICK_ROWS][BRICK_COLS];
+
+bool breakoutInit = false;
+
+
 void BREAKOUT() {
+    if (!breakoutInit) {
+        initBreakout();
+    }
+
     /*      Input    */
+    if (gpio_get(BUTTON_LEFT) == 0 && breakoutPaddleX > 0) {
+        breakoutPaddleX -= 3;
+    }
+
+    if (gpio_get(BUTTON_RIGHT) == 0 &&
+        breakoutPaddleX < SCREEN_WIDTH - 20) {
+        breakoutPaddleX += 3;
+    }
+
+    if (gpio_get(BUTTON_SELECT) == 0) {
+        breakoutInit = false;
+        Game = 0;
+    }
+
     /*      Update    */
+    breakoutBallX += breakoutBallDX;
+    breakoutBallY += breakoutBallDY;
+
+    // Wall collision
+    if (breakoutBallX <= 0 || breakoutBallX >= SCREEN_WIDTH - 2) {
+        breakoutBallDX *= -1;
+    }
+
+    if (breakoutBallY <= 0) {
+        breakoutBallDY *= -1;
+    }
+
+    // Paddle collision
+    if (breakoutBallY >= SCREEN_HEIGHT - 8 &&
+        breakoutBallX >= breakoutPaddleX &&
+        breakoutBallX <= breakoutPaddleX + 20) {
+
+        breakoutBallDY = -1;
+    }
+
+    // Lose
+    if (breakoutBallY > SCREEN_HEIGHT) {
+        breakoutInit = false;
+        Game = 0;
+    }
+
+    // Brick Collision
+    for (int y = 0; y < BRICK_ROWS; y++) {
+        for (int x = 0; x < BRICK_COLS; x++) {
+
+            if (!bricks[y][x]) continue;
+
+            int brickX = x * BRICK_WIDTH;
+            int brickY = y * (BRICK_HEIGHT + 2);
+
+            if (breakoutBallX >= brickX &&
+                breakoutBallX <= brickX + BRICK_WIDTH &&
+                breakoutBallY >= brickY &&
+                breakoutBallY <= brickY + BRICK_HEIGHT) {
+
+                bricks[y][x] = false;
+                breakoutBallDY *= -1;
+            }
+        }
+    }
+
+
     /*      Render    */
+    for (int y = 0; y < BRICK_ROWS; y++) {
+        for (int x = 0; x < BRICK_COLS; x++) {
+
+            if (bricks[y][x]) {
+
+                int brickX = x * BRICK_WIDTH;
+                int brickY = y * (BRICK_HEIGHT + 2);
+
+                ssd1306_draw_square(
+                    &disp,
+                    brickX,
+                    brickY,
+                    BRICK_WIDTH - 1,
+                    BRICK_HEIGHT
+                );
+            }
+        }
+    }
+
+    // Paddle
+    ssd1306_draw_square(
+        &disp,
+        breakoutPaddleX,
+        SCREEN_HEIGHT - 5,
+        20,
+        3
+    );
+
+    // Ball
+    ssd1306_draw_square(&disp, breakoutBallX, breakoutBallY, 2, 2);
+    
+    ssd1306_show(&disp);
+    sleep_ms(20);
+    ssd1306_clear(&disp);
+
 }
 
 ////////////////////////////////////////////////////////////////////
 /*      PACMAN       */
 ////////////////////////////////////////////////////////////////////
 
-void PACMAN() {
-    /*      Input    */
-    /*      Update    */
-    /*      Render    */
+#define MAP_W 16
+#define MAP_H 8
+#define TILE 8
+
+char pacmap[MAP_H][MAP_W + 1] = {
+    "################",
+    "#..............#",
+    "#.####..####...#",
+    "#..............#",
+    "#..##......##..#",
+    "#..............#",
+    "#......##......#",
+    "################"
+};
+
+int pacX = 1;
+int pacY = 1;
+
+int ghostX = 10;
+int ghostY = 5;
+
+int pacDirX = 0;
+int pacDirY = 0;
+
+bool pacmanInit = false;
+
+void initPacman() {
+    pacX = 1;
+    pacY = 1;
+
+    ghostX = 10;
+    ghostY = 5;
+
+    pacDirX = 0;
+    pacDirY = 0;
+
+    pacmanInit = true;
 }
+
+void PACMAN() {
+    if (!pacmanInit) { initPacman(); }
+    
+    /*      Input    */
+    if (gpio_get(BUTTON_UP) == 0) {
+        pacDirX = 0;
+        pacDirY = -1;
+    }
+
+    if (gpio_get(BUTTON_DOWN) == 0) {
+        pacDirX = 0;
+        pacDirY = 1;
+    }
+
+    if (gpio_get(BUTTON_LEFT) == 0) {
+        pacDirX = -1;
+        pacDirY = 0;
+    }
+
+    if (gpio_get(BUTTON_RIGHT) == 0) {
+        pacDirX = 1;
+        pacDirY = 0;
+    }
+
+    if (gpio_get(BUTTON_SELECT) == 0) {
+        pacmanInit = false;
+        Game = 0;
+    }
+    
+    /*      Update    */
+    int nextX = pacX + pacDirX;
+    int nextY = pacY + pacDirY;
+
+    if (pacmap[nextY][nextX] != '#') {
+        pacX = nextX;
+        pacY = nextY;
+    }
+
+    // Eat pellets
+    if (pacmap[pacY][pacX] == '.') { pacmap[pacY][pacX] = ' '; }
+
+    // SIMPLE GHOST AI
+    if (ghostX < pacX && pacmap[ghostY][ghostX + 1] != '#') { ghostX++; }
+    else if (ghostX > pacX && pacmap[ghostY][ghostX - 1] != '#') { ghostX--; }
+
+    if (ghostY < pacY && pacmap[ghostY + 1][ghostX] != '#') { ghostY++; }
+    else if (ghostY > pacY && pacmap[ghostY - 1][ghostX] != '#') { ghostY--; }
+
+    // COLLISION
+    if (pacX == ghostX && pacY == ghostY) {
+        pacmanInit = false;
+        Game = 0;
+    }
+
+    /*      Render    */
+    for (int y = 0; y < MAP_H; y++) {
+        for (int x = 0; x < MAP_W; x++) {
+
+            int px = x * TILE;
+            int py = y * TILE;
+
+            if (pacmap[y][x] == '#') {
+
+                ssd1306_draw_square(
+                    &disp,
+                    px,
+                    py,
+                    TILE,
+                    TILE
+                );
+            }
+
+            if (pacmap[y][x] == '.') {
+
+                ssd1306_draw_pixel(
+                    &disp,
+                    px + 4,
+                    py + 4
+                );
+            }
+        }
+    }
+
+    // Pacman
+    ssd1306_draw_square(&disp, pacX * TILE + 2, pacY * TILE + 2, 4, 4);
+
+    // Ghost
+    ssd1306_draw_square(&disp, ghostX * TILE + 2, ghostY * TILE + 2, 4, 4);
+
+    ssd1306_show(&disp);
+    sleep_ms(120);
+    ssd1306_clear(&disp);
+}
+
 
 int main() {
     const uint led_pin = 25;
