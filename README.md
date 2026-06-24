@@ -8,7 +8,7 @@ Small Project with a few games to run on the Pico micro-controller
 - Breakout
 - Pacman
 
-#### Software
+#### Thirdparty
 - [Pico-ssd1306 by daschr](https://github.com/daschr/pico-ssd1306)
 - [pico-sdk](https://github.com/raspberrypi/pico-sdk)
 
