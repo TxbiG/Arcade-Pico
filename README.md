@@ -17,4 +17,6 @@ Small Project with a few games to run on the Pico micro-controller
 - ```Microcontroller-board```: Raspberry Pi Pico
 - ```Buttons```: Tactile Switch Buttons (12mm square, 6mm tall) x 10 pack
 - ```Speaker```: Mini Oval speaker (Adafru)
+- ```Mono Amplifier```: MAX98357A I2S Amplifier
+- ```Charging port```: Adafruit USB-C MicroLipo
 - ```Battery```: Lithium-ion battery small
